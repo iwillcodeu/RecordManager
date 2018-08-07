@@ -123,51 +123,55 @@ func fileXlsx(filePath string) {
        os.Exit(1)
     }
     rows := xlsx.GetRows("Sheet1")
-    i := 0
+
     db := mysql.New("tcp", "", "127.0.0.1:3306", "root", "xiaodao", "webdemo")
     if err := db.Connect(); err != nil {
         log.Println(err)
-        OutputJson(w, 0, "数据库操作失败", nil)
+        //OutputJson(w, 0, "数据库操作失败", nil)
         return
     }
     defer db.Close()
-
+    i := 0
+    var category, originalTxt, details string
+    var original int
+    var code float64
     for _, row := range rows[1:] {
        for _, colCell := range row {
            i++
            switch i{
                case 1:{
-                   category := colCell
+                   category = colCell
                }
                case 2:{
-                   original,_:= strconv.Atoi(colCell)
+                   original,_ = strconv.Atoi(colCell)
 
                }
                case 3:{
-                   originalTxt := colCell
+                   originalTxt = colCell
 
                }
                case 4:{
-                   details := colCell
+                   details = colCell
 
                }
                case 5:{
-                   val,_:=strconv.ParseFloat(colCell,32)
-                   val = val * 10
-                   val = float64(int(val))/10
+                   code,_ = strconv.ParseFloat(colCell,32)
+                   code = code * 10
+                   code = float64(int(code))/10
                }
             stmt, err := db.Prepare("insert into bianmaindex values(?, ?, ?,?,?)")
             if err != nil {
                 panic(err)
             }
             defer db.Close()
-            result, error := stmt.Exec(category, original, originalTxt, details, val)
+            stmt.Exec(category, original, originalTxt, details, code)
 
            }
        }
        fmt.Println("")
     }
 }
+
 
 func ajaxHandler(w http.ResponseWriter, r *http.Request) {
     pathInfo := strings.Trim(r.URL.Path, "/")
